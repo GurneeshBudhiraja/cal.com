@@ -117,6 +117,20 @@ const isBookingReroutable = (booking: ParsedBooking): booking is ReroutableBooki
   return !!booking.routedFromRoutingFormReponse && !!booking.eventType?.team;
 };
 
+/**
+ * Renders a single booking list row with its metadata, attendee display, action controls, and related dialogs.
+ *
+ * This component normalizes the given booking, derives display state (time, location, badges, recurring info),
+ * wires up TRPC mutations (confirm/reject, mark no-show, edit location, charge card, etc.), and exposes UI for
+ * editing or performing actions on the booking (reschedule, reroute, change location, add guests, view recordings,
+ * mark no-show, cancel, confirm/reject, and related dialogs).
+ *
+ * The component returns the full interactive booking row including in-place dialogs and menus; mutations invalidate
+ * booking queries on success to refresh the list.
+ *
+ * @param booking - The booking item metadata and UI context (type: BookingItemProps).
+ * @returns A JSX element representing the booking row.
+ */
 function BookingListItem(booking: BookingItemProps) {
   const parsedBooking = buildParsedBooking(booking);
 

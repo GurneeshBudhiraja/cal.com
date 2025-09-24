@@ -199,11 +199,32 @@ export function shouldShowEditActions(context: BookingActionContext): boolean {
   return !isPending && !(isTabRecurring && isRecurring) && !isCancelled;
 }
 
+/**
+ * Determine whether the recurring cancel action should be shown.
+ *
+ * Returns true when the current UI is the recurring tab and the booking itself is a recurring booking.
+ *
+ * @param context - BookingActionContext containing at least `isTabRecurring` and `isRecurring`.
+ * @returns `true` if the recurring cancel action should be displayed; otherwise `false`.
+ */
 export function shouldShowRecurringCancelAction(context: BookingActionContext): boolean {
   const { isTabRecurring, isRecurring } = context;
   return isTabRecurring && isRecurring;
 }
 
+/**
+ * Determines whether a given booking action should be disabled for the provided context.
+ *
+ * Evaluates action-specific rules using the booking and UI state (rescheduling/cancelling limits, booking timing/status, video availability, card charge state, and host privileges). Key decisions:
+ * - "reschedule" / "reschedule_request": disabled if the booking is in the past and past rescheduling isn't allowed, or if rescheduling is globally disabled.
+ * - "cancel": always allowed for hosts; otherwise disabled if cancelling is globally disabled or the booking is in the past.
+ * - "view_recordings" / "meeting_session_details": enabled only when the booking is in the past, accepted, and the location supports Cal video.
+ * - "charge_card": disabled when the card has already been charged.
+ * - Unknown action IDs are treated as enabled.
+ *
+ * @param actionId - Action identifier (e.g., "reschedule", "reschedule_request", "cancel", "view_recordings", "meeting_session_details", "charge_card").
+ * @returns True if the action should be disabled for the given context, false otherwise.
+ */
 export function isActionDisabled(actionId: string, context: BookingActionContext): boolean {
   const {
     booking,
@@ -233,6 +254,20 @@ export function isActionDisabled(actionId: string, context: BookingActionContext
   }
 }
 
+/**
+ * Returns the localized label for a booking action.
+ *
+ * Resolves special cases for certain action IDs:
+ * - "reject" / "confirm": when (isTabRecurring || isTabUnconfirmed) and isRecurring, returns the all-variant label.
+ * - "cancel": when isTabRecurring and isRecurring, returns "cancel_all_remaining" else "cancel_event".
+ * - "no_show": if there is exactly one attendee and that attendee is already marked no-show, returns "unmark_as_no_show", otherwise "mark_as_no_show".
+ * - "charge_card": returns "no_show_fee_charged" when `cardCharged` is true, otherwise "collect_no_show_fee".
+ * - default: returns the translation for the given `actionId`.
+ *
+ * @param actionId - The action identifier (e.g., "cancel", "confirm", "no_show", "charge_card").
+ * @param context - Booking action context containing flags and the translation function `t`.
+ * @returns The localized label for the specified action.
+ */
 export function getActionLabel(actionId: string, context: BookingActionContext): string {
   const { booking: _booking, isTabRecurring, isRecurring, attendeeList, cardCharged, t } = context;
 
